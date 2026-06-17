@@ -35,8 +35,6 @@ public class VideotecaGUI extends JFrame implements Observer{
     private JTextField txtFiltroGenere;
     private JComboBox<String> comboFiltroStato;
     private JComboBox<String> comboOrdinamento;
-
-
     private JComboBox<StatoVisione> comboStatoInserimento;
 
     public VideotecaGUI(Videoteca videoteca, VideotecaFacade facade) {
@@ -45,44 +43,40 @@ public class VideotecaGUI extends JFrame implements Observer{
         
         this.videoteca.attach(this);
 
-        setTitle("🎬 Sistema di Gestione Videoteca - Con Validazione Dinamica");
-        setSize(1000, 620);
+        setTitle("🎬 Sistema di Gestione Videoteca - Layout Intelligente");
+        setSize(1020, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
-
-        JPanel panelNord = new JPanel(new GridLayout(2, 1, 5, 5));
+        JPanel panelNord = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 5));
         panelNord.setBorder(BorderFactory.createTitledBorder("Pannello di Controllo Visualizzazione"));
 
-        JPanel riga1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        txtSearch = new JTextField(15);
+        txtSearch = new JTextField(12);
         comboTipoSearch = new JComboBox<>(new String[]{"Titolo", "Regista"});
-        riga1.add(new JLabel("Cerca testo:"));
-        riga1.add(txtSearch);
-        riga1.add(new JLabel("In campo:"));
-        riga1.add(comboTipoSearch);
-
-        JPanel riga2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         txtFiltroGenere = new JTextField(10);
         comboFiltroStato = new JComboBox<>(new String[]{"Tutti", "VISTO", "DA_VEDERE", "IN_VISIONE"});
         comboOrdinamento = new JComboBox<>(new String[]{"Nessuno", "Titolo", "Anno", "Valutazione"});
         JButton btnApplica = new JButton("🔄 Applica Filtri e Ordina");
         JButton btnReset = new JButton("❌ Resetta");
 
-        riga2.add(new JLabel("Filtra Genere:"));
-        riga2.add(txtFiltroGenere);
-        riga2.add(new JLabel("Stato Visione:"));
-        riga2.add(comboFiltroStato);
-        riga2.add(new JLabel("Ordina per:"));
-        riga2.add(comboOrdinamento);
-        riga2.add(btnApplica);
-        riga2.add(btnReset);
+        panelNord.add(new JLabel("Cerca testo:"));
+        panelNord.add(txtSearch);
+        panelNord.add(new JLabel("In campo:"));
+        panelNord.add(comboTipoSearch);
+        
+        panelNord.add(new JLabel(" | ")); // Separatore visivo
 
-        panelNord.add(riga1);
-        panelNord.add(riga2);
+        panelNord.add(new JLabel("Filtra Genere:"));
+        panelNord.add(txtFiltroGenere);
+        panelNord.add(new JLabel("Stato Visione:"));
+        panelNord.add(comboFiltroStato);
+        panelNord.add(new JLabel("Ordina per:"));
+        panelNord.add(comboOrdinamento);
+        panelNord.add(btnApplica);
+        panelNord.add(btnReset);
+
         add(panelNord, BorderLayout.NORTH);
-
 
         String[] colonne = {"ID", "Titolo", "Regista", "Anno", "Genere", "Voto (1-5 ★)", "Stato"};
         tableModel = new DefaultTableModel(colonne, 0) {
@@ -116,7 +110,6 @@ public class VideotecaGUI extends JFrame implements Observer{
         panelInput.add(txtVoto);
         panelInput.add(comboStatoInserimento);
 
-
         JPanel panelBottoni = new JPanel(new GridLayout(5, 1, 5, 5));
         JButton btnAggiungi = new JButton("Aggiungi Film");
         JButton btnModifica = new JButton("Modifica Selezionato");
@@ -135,17 +128,18 @@ public class VideotecaGUI extends JFrame implements Observer{
         southContainer.add(panelBottoni, BorderLayout.EAST);
         add(southContainer, BorderLayout.SOUTH);
 
-    
+       
         comboStatoInserimento.addActionListener(e -> {
             StatoVisione statocorrente = (StatoVisione) comboStatoInserimento.getSelectedItem();
             if (statocorrente == StatoVisione.DA_VEDERE || statocorrente == StatoVisione.IN_VISIONE) {
-                txtVoto.setText(""); 
-                txtVoto.setEnabled(false); 
+                txtVoto.setText("");
+                txtVoto.setEnabled(false);
             } else {
-                txtVoto.setEnabled(true); 
+                txtVoto.setEnabled(true);
             }
         });
 
+       
         tabellaFilm.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tabellaFilm.getSelectedRow() != -1) {
                 int riga = tabellaFilm.getSelectedRow();
@@ -214,7 +208,6 @@ public class VideotecaGUI extends JFrame implements Observer{
         update();
     }
 
-
     private boolean gestioneSalvataggioOModifica(int id) {
         try {
             String titolo = txtTitolo.getText().trim();
@@ -222,14 +215,12 @@ public class VideotecaGUI extends JFrame implements Observer{
             int anno = Integer.parseInt(txtAnno.getText().trim());
             String genere = txtGenere.getText().trim();
             StatoVisione stato = (StatoVisione) comboStatoInserimento.getSelectedItem();
-            
-            int voto = 0; 
+            int voto = 0;
 
             if (titolo.isEmpty() || regista.isEmpty() || genere.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Tutti i campi testuali devono essere compilati.");
                 return false;
             }
-
 
             if (stato == StatoVisione.VISTO) {
                 voto = Integer.parseInt(txtVoto.getText().trim());
@@ -244,7 +235,7 @@ public class VideotecaGUI extends JFrame implements Observer{
             else facade.modificaFilm(id, dati);
             return true;
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Controlla i campi numerici (L'anno è obbligatorio, il voto solo se Visto).");
+            JOptionPane.showMessageDialog(this, "Controlla i campi numerici.");
             return false;
         }
     }
@@ -252,7 +243,7 @@ public class VideotecaGUI extends JFrame implements Observer{
     private void pulisciCampi() {
         txtTitolo.setText(""); txtRegista.setText(""); txtAnno.setText(""); 
         txtGenere.setText(""); txtVoto.setText(""); comboStatoInserimento.setSelectedIndex(0);
-        txtVoto.setEnabled(true); // Ripristina lo stato iniziale sbloccato
+        txtVoto.setEnabled(true);
     }
 
     @Override
@@ -273,6 +264,43 @@ public class VideotecaGUI extends JFrame implements Observer{
                 f.getId(), f.getTitolo(), f.getRegista(), f.getAnnoUscita(), f.getGenere(), f.getValutazione(), f.getStatoVisione()
             };
             tableModel.addRow(riga);
+        }
+    }
+}
+
+class WrapLayout extends FlowLayout {
+    public WrapLayout(int align, int hgap, int vgap) { super(align, hgap, vgap); }
+    @Override public Dimension preferredLayoutSize(Container target) { return layoutSize(target, true); }
+    @Override public Dimension minimumLayoutSize(Container target) { return layoutSize(target, false); }
+
+    private Dimension layoutSize(Container target, boolean preferred) {
+        synchronized (target.getTreeLock()) {
+            int targetWidth = target.getWidth();
+            if (targetWidth == 0) targetWidth = Integer.MAX_VALUE;
+            int hgap = getHgap(); int vgap = getVgap();
+            Insets insets = target.getInsets();
+            int maxwidth = targetWidth - (insets.left + insets.right + hgap * 2);
+            int nmembers = target.getComponentCount();
+            int x = 0, y = insets.top + vgap;
+            int rowHeight = 0;
+
+            for (int i = 0; i < nmembers; i++) {
+                Component m = target.getComponent(i);
+                if (m.isVisible()) {
+                    Dimension d = preferred ? m.getPreferredSize() : m.getMinimumSize();
+                    if (x == 0 || x + d.width <= maxwidth) {
+                        if (x > 0) x += hgap;
+                        x += d.width;
+                        rowHeight = Math.max(rowHeight, d.height);
+                    } else {
+                        x = d.width;
+                        y += vgap + rowHeight;
+                        rowHeight = d.height;
+                    }
+                }
+            }
+            y += rowHeight + vgap + insets.bottom;
+            return new Dimension(targetWidth, y);
         }
     }
 }
