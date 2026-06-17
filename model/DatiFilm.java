@@ -15,4 +15,11 @@ public class DatiFilm {
         this.valutazione=valutazione;
         this.statoVisione=statoVisione;
     }
+
+    public String getTitolo() { return titolo; }
+    public String getRegista() { return regista; }
+    public int getAnnoUscita() { return annoUscita; }
+    public String getGenere() { return genere; }
+    public int getValutazione() { return valutazione; }
+    public StatoVisione getStatoVisione() { return statoVisione; }
 }

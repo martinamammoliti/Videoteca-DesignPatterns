@@ -52,25 +52,33 @@ public class VideotecaFacade {
         
         List<FilmIF> risultato = videoteca.getElenco();
 
+        // 1. Gestione Ricerca Testuale tramite Context
         if (testo != null && !testo.isEmpty()) {
             if ("Titolo".equalsIgnoreCase(tipo)) {
-                risultato = new RicercaTitoloStrategy(testo).eseguiQuery(risultato);
+                queryContext.setStrategy(new RicercaTitoloStrategy(testo));
             } else if ("Regista".equalsIgnoreCase(tipo)) {
-                risultato = new RicercaRegistaStrategy(testo).eseguiQuery(risultato);
+                queryContext.setStrategy(new RicercaRegistaStrategy(testo));
             }
+            risultato = queryContext.eseguiQuery(risultato);
         }
 
+        // 2. Gestione Filtro Genere tramite Context
         if (genereFiltro != null && !genereFiltro.isEmpty() && !"Tutti".equalsIgnoreCase(genereFiltro)) {
-            risultato = new FiltroGenereStrategy(genereFiltro).eseguiQuery(risultato);
+            queryContext.setStrategy(new FiltroGenereStrategy(genereFiltro));
+            risultato = queryContext.eseguiQuery(risultato);
         }
 
+        // 3. Gestione Filtro Stato tramite Context
         if (statoFiltro != null && !"Tutti".equalsIgnoreCase(statoFiltro)) {
             StatoVisione stato = StatoVisione.valueOf(statoFiltro);
-            risultato = new FiltroStatoStrategy(stato).eseguiQuery(risultato);
+            queryContext.setStrategy(new FiltroStatoStrategy(stato));
+            risultato = queryContext.eseguiQuery(risultato);
         }
 
+        // 4. Gestione Ordinamento tramite Context
         if (criterioOrdinamento != null && !"Nessuno".equalsIgnoreCase(criterioOrdinamento)) {
-            risultato = new OrdinamentoStrategy(criterioOrdinamento).eseguiQuery(risultato);
+            queryContext.setStrategy(new OrdinamentoStrategy(criterioOrdinamento));
+            risultato = queryContext.eseguiQuery(risultato);
         }
 
         return risultato;

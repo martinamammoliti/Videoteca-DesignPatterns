@@ -230,7 +230,14 @@ public class VideotecaGUI extends JFrame implements Observer{
                 }
             }
 
-            DatiFilm dati = new DatiFilm(titolo, regista, anno, genere, voto, stato);
+            DatiFilm dati = new DatiFilm.Builder()
+    .withTitolo(titolo)
+    .withRegista(regista)
+    .withAnno(anno)
+    .withGenere(genere)
+    .withVoto(voto)
+    .withStato(stato)
+    .build();
             if (id == -1) facade.inserisciFilm(dati);
             else facade.modificaFilm(id, dati);
             return true;
