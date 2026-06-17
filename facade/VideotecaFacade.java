@@ -11,16 +11,16 @@ import persistence.ArchivioFilm;
 
 public class VideotecaFacade {
     private final Videoteca videoteca;
-    private final FilmCreationDirector director;
+    private final FilmDirector director;
     private final FilmBuilder builder;
     private final CommandManager commandManager;
     private final FilmQueryContext queryContext;
-    private final ArchivoFilm archivio;
+    private final ArchivioFilm archivio;
     private int prossimoId=1;
 
     public VideotecaFacade(Videoteca videoteca){
         this.videoteca=videoteca;
-        this.director=new FilmCreationDirector();
+        this.director=new FilmDirector();
         this.builder=new ConcreteFilmBuilder();
         this.commandManager=new CommandManager();
         this.queryContext=new FilmQueryContext();
@@ -31,7 +31,7 @@ public class VideotecaFacade {
         int id=prossimoId++;
         FilmIF nuovoFilm=director.creaFilm(builder, id, dati);
         Command cmd=new InserisciFilmCommand(videoteca, nuovoFilm);
-        CommandManager.eseguiComando(cmd);
+        commandManager.eseguiComando(cmd);
     }
 
     public void modificaFilm(int id, DatiFilm nuoviDati){
@@ -56,8 +56,8 @@ public class VideotecaFacade {
     }
 
     public void caricaDati(){
-        System.out.println("Richiesta di caricamento dati dall'archivio...")
+        System.out.println("Richiesta di caricamento dati dall'archivio...");
         List<FilmIF> datiDaDisco=archivio.carica();
-        videoteca.setElenco(filmPrecaricati);
+        videoteca.setElenco(datiDaDisco);
     }
 }

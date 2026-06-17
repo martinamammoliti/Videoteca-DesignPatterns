@@ -1,4 +1,6 @@
 package builder;
+
+import model.*;
 public class FilmDirector {
     public FilmIF creaFilm (FilmBuilder builder, int id, DatiFilm dati){
         builder.reset();

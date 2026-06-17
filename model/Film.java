@@ -1,3 +1,5 @@
+package model;
+
 public class Film implements FilmIF{
     private final int id;
     private final String titolo;
@@ -7,7 +9,7 @@ public class Film implements FilmIF{
     private final int valutazione;
     private final StatoVisione statoVisione;
 
-    Film(int id, String titolo, String regista, int annoUscita, String genere, int valutazione, StatoVisione statoVisione) {
+    public Film(int id, String titolo, String regista, int annoUscita, String genere, int valutazione, StatoVisione statoVisione) {
         this.id = id;
         this.titolo = titolo;
         this.regista = regista;

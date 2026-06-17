@@ -1,3 +1,4 @@
+package model;
 public interface FilmIF {
     int getId();
     String getTitolo();

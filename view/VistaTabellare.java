@@ -1,6 +1,7 @@
 package view;
 
-import model.Videoteca;
+import model.*;
+import java.util.List;
 
 public class VistaTabellare implements Observer{
     private final Videoteca videoteca;
@@ -24,7 +25,7 @@ public class VistaTabellare implements Observer{
         else{
             for(FilmIF f:lista){
                 System.out.println(String.format("[%d] %s - Regia: %s (%d) | [%s] Voto: %d/10", 
-                    f.getId(), f.getTitolo(), f.getRegista, f.getAnnoUscita(), f.getStatoVisione(), f.getValutazione()
+                    f.getId(), f.getTitolo(), f.getRegista(), f.getAnnoUscita(), f.getStatoVisione(), f.getValutazione()
                 ));
             }
         }

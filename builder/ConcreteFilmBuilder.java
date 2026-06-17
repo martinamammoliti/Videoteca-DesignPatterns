@@ -1,4 +1,7 @@
 package builder;
+
+import model.*;
+
 public class ConcreteFilmBuilder implements FilmBuilder{
     private int id;
     private String titolo;

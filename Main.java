@@ -1,6 +1,9 @@
 import java.util.List;
 
 import facade.VideotecaFacade;
+import model.DatiFilm;
+import model.FilmIF;
+import model.StatoVisione;
 import model.Videoteca;
 import view.VistaTabellare;
 

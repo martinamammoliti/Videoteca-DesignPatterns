@@ -1,11 +1,12 @@
 package strategy;
 
 import java.util.ArrayList;
-
+import java.util.List;
+import model.*;
 public class RicercaTitoloStrategy implements FilmQueryStrategy{
     private final String titoloTarget;
 
-    public RicercaTitoloStrategy(String titoloTarget{
+    public RicercaTitoloStrategy(String titoloTarget){
         this.titoloTarget=titoloTarget;
     }
 

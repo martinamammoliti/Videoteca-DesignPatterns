@@ -1,4 +1,6 @@
 package builder;
+
+import model.*;
 public interface FilmBuilder {
     void reset();
     void impostaId(int id);

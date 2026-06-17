@@ -49,7 +49,7 @@ public class Videoteca {
     }
 
     public List<FilmIF> getElenco(){
-        return new ArrayList<>(elencoFilm;
+        return new ArrayList<>(elencoFilm);
     }
 
 }

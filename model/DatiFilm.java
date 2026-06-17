@@ -1,3 +1,4 @@
+package model;
 public class DatiFilm {
     public String titolo;
     public String regista;

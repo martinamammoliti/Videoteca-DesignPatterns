@@ -9,11 +9,11 @@ import builder.*;
 
 public class ArchivioFilm {
     private final FilmBuilder builder;
-    private final FilmCreationDirector director;
+    private final FilmDirector director;
 
     public ArchivioFilm(){
         this.builder=new ConcreteFilmBuilder();
-        this.director=new FilmCreationDirector();
+        this.director=new FilmDirector();
     }
 
     public List<FilmIF> carica(){
