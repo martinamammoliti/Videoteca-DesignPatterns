@@ -1,5 +1,10 @@
 package strategy;
 
+import java.util.List;
+
+import model.*;
+
+
 public class FilmQueryContext{
     private FilmQueryStrategy strategy;
 

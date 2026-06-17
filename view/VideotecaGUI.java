@@ -29,7 +29,10 @@ public class VideotecaGUI extends JFrame implements Observer{
     private JTable tabellaFilm;
     private DefaultTableModel tableModel;
     private JTextField txtTitolo, txtRegista, txtAnno, txtGenere, txtVoto;
+    private JTextField txtFiltroTitolo;
     private JComboBox<StatoVisione> comboStato;
+
+    private String filtroAttivo = "";
 
     public VideotecaGUI(Videoteca videoteca, VideotecaFacade facade) {
         this.videoteca = videoteca;
@@ -42,6 +45,19 @@ public class VideotecaGUI extends JFrame implements Observer{
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Centra lo schermo
         setLayout(new BorderLayout(10, 10));
+
+        JPanel panelRicerca = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panelRicerca.setBorder(BorderFactory.createTitledBorder("Filtra Catalogo (Strategy Pattern)"));
+        
+        txtFiltroTitolo = new JTextField(20);
+        JButton btnCerca = new JButton("Cerca per Titolo");
+        JButton btnResettaFiltro = new JButton("Mostra Tutti");
+
+        panelRicerca.add(new JLabel("Digita Titolo:"));
+        panelRicerca.add(txtFiltroTitolo);
+        panelRicerca.add(btnCerca);
+        panelRicerca.add(btnResettaFiltro);
+        add(panelRicerca, BorderLayout.NORTH);
 
         String[] colonne = {"ID", "Titolo", "Regista", "Anno", "Genere", "Voto", "Stato"};
         tableModel = new DefaultTableModel(colonne, 0);
@@ -72,13 +88,15 @@ public class VideotecaGUI extends JFrame implements Observer{
         panelInput.add(txtVoto);
         panelInput.add(comboStato);
 
-        JPanel panelBottoni = new JPanel(new GridLayout(3, 1, 5, 5));
+        JPanel panelBottoni = new JPanel(new GridLayout(4, 1, 5, 5)); // Spazio per 4 bottoni ora
         JButton btnAggiungi = new JButton("Aggiungi Film");
         JButton btnRimuovi = new JButton("Rimuovi Selezionato");
+        JButton btnSalvaBackup = new JButton("Salva in Archivio");
         JButton btnCaricaBackup = new JButton("Carica da Archivio");
 
         panelBottoni.add(btnAggiungi);
         panelBottoni.add(btnRimuovi);
+        panelBottoni.add(btnSalvaBackup);
         panelBottoni.add(btnCaricaBackup);
 
         JPanel southContainer = new JPanel(new BorderLayout());
@@ -86,19 +104,41 @@ public class VideotecaGUI extends JFrame implements Observer{
         southContainer.add(panelBottoni, BorderLayout.EAST);
         add(southContainer, BorderLayout.SOUTH);
 
-        btnAggiungi.addActionListener(e -> gestioneInserimento());
+        btnCerca.addActionListener(e -> {
+            filtroAttivo = txtFiltroTitolo.getText().trim();
+            update();
+        });
+
+        btnResettaFiltro.addActionListener(e -> {
+            txtFiltroTitolo.setText("");
+            filtroAttivo = "";
+            update();
+        });
+
+        btnAggiungi.addActionListener(e -> {
+            gestioneInserimento();
+            facade.salvaDati(); 
+        });
 
         btnRimuovi.addActionListener(e -> {
             int rigaSelezionata = tabellaFilm.getSelectedRow();
             if (rigaSelezionata != -1) {
                 int id = (int) tableModel.getValueAt(rigaSelezionata, 0);
                 facade.rimuoviFilm(id);
+                facade.salvaDati(); 
             } else {
                 JOptionPane.showMessageDialog(this, "Seleziona un film dalla tabella per rimuoverlo.");
             }
         });
 
-        btnCaricaBackup.addActionListener(e -> facade.caricaDati());
+        btnSalvaBackup.addActionListener(e -> {
+            facade.salvaDati();
+            JOptionPane.showMessageDialog(this, "Catalogo esportato con successo in 'catalogo.csv'!");
+        });
+
+        btnCaricaBackup.addActionListener(e -> {
+            facade.caricaDati();
+        });
 
         update();
     }
@@ -127,9 +167,17 @@ public class VideotecaGUI extends JFrame implements Observer{
     public void update() {
         tableModel.setRowCount(0);
 
-        List<FilmIF> catalogoAttuale = videoteca.getElenco();
+        List<FilmIF> datiDaMostrare;
+        
+        if (!filtroAttivo.isEmpty()) {
+            System.out.println("[GUI] Richiesta di filtraggio per titolo via Strategy: " + filtroAttivo);
+            datiDaMostrare = facade.cercaPerTitolo(filtroAttivo);
+        } else {
+            System.out.println("[GUI] Richiesta catalogo completo.");
+            datiDaMostrare = facade.ottieniCatalogoCompleto();
+        }
 
-        for (FilmIF f : catalogoAttuale) {
+        for (FilmIF f : datiDaMostrare) {
             Object[] riga = {
                 f.getId(),
                 f.getTitolo(),

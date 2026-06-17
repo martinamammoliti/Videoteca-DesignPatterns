@@ -55,9 +55,21 @@ public class VideotecaFacade {
         return queryContext.eseguiQuery(videoteca.getElenco());
     }
 
-    public void caricaDati(){
-        System.out.println("Richiesta di caricamento dati dall'archivio...");
-        List<FilmIF> datiDaDisco=archivio.carica();
+    public void salvaDati() {
+        System.out.println("[Facade] Richiesta di salvataggio del catalogo attuale...");
+        archivio.salva(videoteca.getElenco());
+    }
+
+    public void caricaDati() {
+        System.out.println("[Facade] Richiesta di caricamento dati dall'archivio...");
+        List<FilmIF> datiDaDisco = archivio.carica();
+        
+        for (FilmIF f : datiDaDisco) {
+            if (f.getId() >= prossimoId) {
+                prossimoId = f.getId() + 1;
+            }
+        }
+        
         videoteca.setElenco(datiDaDisco);
     }
 }

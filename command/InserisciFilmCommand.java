@@ -1,5 +1,5 @@
 package command;
-import model.Videoteca;
+import model.*;
 
 public class InserisciFilmCommand implements Command{
     private final Videoteca videoteca;
