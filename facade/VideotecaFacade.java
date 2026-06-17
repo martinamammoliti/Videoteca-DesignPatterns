@@ -45,9 +45,35 @@ public class VideotecaFacade {
         commandManager.eseguiComando(cmd);
     }
 
-    public List<FilmIF> cercaPerTitolo(String titolo){
-        queryContext.setStrategy(new RicercaTitoloStrategy(titolo));
-        return queryContext.eseguiQuery(videoteca.getElenco());
+    public List<FilmIF> ottieniCatalogoFiltratoEOrdinato(
+        String testo, String tipo, 
+        String genereFiltro, String statoFiltro, 
+        String criterioOrdinamento) {
+        
+        List<FilmIF> risultato = videoteca.getElenco();
+
+        if (testo != null && !testo.isEmpty()) {
+            if ("Titolo".equalsIgnoreCase(tipo)) {
+                risultato = new RicercaTitoloStrategy(testo).eseguiQuery(risultato);
+            } else if ("Regista".equalsIgnoreCase(tipo)) {
+                risultato = new RicercaRegistaStrategy(testo).eseguiQuery(risultato);
+            }
+        }
+
+        if (genereFiltro != null && !genereFiltro.isEmpty() && !"Tutti".equalsIgnoreCase(genereFiltro)) {
+            risultato = new FiltroGenereStrategy(genereFiltro).eseguiQuery(risultato);
+        }
+
+        if (statoFiltro != null && !"Tutti".equalsIgnoreCase(statoFiltro)) {
+            StatoVisione stato = StatoVisione.valueOf(statoFiltro);
+            risultato = new FiltroStatoStrategy(stato).eseguiQuery(risultato);
+        }
+
+        if (criterioOrdinamento != null && !"Nessuno".equalsIgnoreCase(criterioOrdinamento)) {
+            risultato = new OrdinamentoStrategy(criterioOrdinamento).eseguiQuery(risultato);
+        }
+
+        return risultato;
     }
 
     public List<FilmIF> ottieniCatalogoCompleto(){
