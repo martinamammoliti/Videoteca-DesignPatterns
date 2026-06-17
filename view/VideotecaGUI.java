@@ -30,12 +30,14 @@ public class VideotecaGUI extends JFrame implements Observer{
     private DefaultTableModel tableModel;
     private JTextField txtTitolo, txtRegista, txtAnno, txtGenere, txtVoto;
     
-    // Componenti di Ricerca, Filtro e Ordinamento (North Panel)
     private JTextField txtSearch;
     private JComboBox<String> comboTipoSearch;
     private JTextField txtFiltroGenere;
     private JComboBox<String> comboFiltroStato;
     private JComboBox<String> comboOrdinamento;
+
+
+    private JComboBox<StatoVisione> comboStatoInserimento;
 
     public VideotecaGUI(Videoteca videoteca, VideotecaFacade facade) {
         this.videoteca = videoteca;
@@ -43,13 +45,13 @@ public class VideotecaGUI extends JFrame implements Observer{
         
         this.videoteca.attach(this);
 
-        setTitle("🎬 Sistema di Gestione Videoteca Professionale");
+        setTitle("🎬 Sistema di Gestione Videoteca - Con Validazione Dinamica");
         setSize(1000, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(10, 10));
 
-        
+
         JPanel panelNord = new JPanel(new GridLayout(2, 1, 5, 5));
         panelNord.setBorder(BorderFactory.createTitledBorder("Pannello di Controllo Visualizzazione"));
 
@@ -63,10 +65,8 @@ public class VideotecaGUI extends JFrame implements Observer{
 
         JPanel riga2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         txtFiltroGenere = new JTextField(10);
-        
         comboFiltroStato = new JComboBox<>(new String[]{"Tutti", "VISTO", "DA_VEDERE", "IN_VISIONE"});
         comboOrdinamento = new JComboBox<>(new String[]{"Nessuno", "Titolo", "Anno", "Valutazione"});
-        
         JButton btnApplica = new JButton("🔄 Applica Filtri e Ordina");
         JButton btnReset = new JButton("❌ Resetta");
 
@@ -82,6 +82,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         panelNord.add(riga1);
         panelNord.add(riga2);
         add(panelNord, BorderLayout.NORTH);
+
 
         String[] colonne = {"ID", "Titolo", "Regista", "Anno", "Genere", "Voto (1-5 ★)", "Stato"};
         tableModel = new DefaultTableModel(colonne, 0) {
@@ -99,7 +100,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         txtAnno = new JTextField();
         txtGenere = new JTextField();
         txtVoto = new JTextField();
-        JComboBox<StatoVisione> comboStatoInserimento = new JComboBox<>(StatoVisione.values());
+        comboStatoInserimento = new JComboBox<>(StatoVisione.values());
 
         panelInput.add(new JLabel("Titolo:"));
         panelInput.add(new JLabel("Regista:"));
@@ -114,6 +115,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         panelInput.add(txtGenere);
         panelInput.add(txtVoto);
         panelInput.add(comboStatoInserimento);
+
 
         JPanel panelBottoni = new JPanel(new GridLayout(5, 1, 5, 5));
         JButton btnAggiungi = new JButton("Aggiungi Film");
@@ -133,6 +135,16 @@ public class VideotecaGUI extends JFrame implements Observer{
         southContainer.add(panelBottoni, BorderLayout.EAST);
         add(southContainer, BorderLayout.SOUTH);
 
+    
+        comboStatoInserimento.addActionListener(e -> {
+            StatoVisione statocorrente = (StatoVisione) comboStatoInserimento.getSelectedItem();
+            if (statocorrente == StatoVisione.DA_VEDERE || statocorrente == StatoVisione.IN_VISIONE) {
+                txtVoto.setText(""); 
+                txtVoto.setEnabled(false); 
+            } else {
+                txtVoto.setEnabled(true); 
+            }
+        });
 
         tabellaFilm.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tabellaFilm.getSelectedRow() != -1) {
@@ -141,25 +153,32 @@ public class VideotecaGUI extends JFrame implements Observer{
                 txtRegista.setText(tableModel.getValueAt(riga, 2).toString());
                 txtAnno.setText(tableModel.getValueAt(riga, 3).toString());
                 txtGenere.setText(tableModel.getValueAt(riga, 4).toString());
-                txtVoto.setText(tableModel.getValueAt(riga, 5).toString());
-                comboStatoInserimento.setSelectedItem(tableModel.getValueAt(riga, 6));
+                
+                StatoVisione statoCaricato = (StatoVisione) tableModel.getValueAt(riga, 6);
+                comboStatoInserimento.setSelectedItem(statoCaricato);
+
+                if (statoCaricato == StatoVisione.DA_VEDERE || statoCaricato == StatoVisione.IN_VISIONE) {
+                    txtVoto.setText("");
+                    txtVoto.setEnabled(false);
+                } else {
+                    txtVoto.setText(tableModel.getValueAt(riga, 5).toString());
+                    txtVoto.setEnabled(true);
+                }
             }
         });
 
-        btnApplica.addActionListener(e -> update()); // Rinfresca applicando i parametri attuali
+        btnApplica.addActionListener(e -> update());
         
         btnReset.addActionListener(e -> {
-            txtSearch.setText("");
-            txtFiltroGenere.setText("");
-            comboFiltroStato.setSelectedIndex(0);
-            comboOrdinamento.setSelectedIndex(0);
+            txtSearch.setText(""); txtFiltroGenere.setText("");
+            comboFiltroStato.setSelectedIndex(0); comboOrdinamento.setSelectedIndex(0);
             update();
         });
 
         btnAggiungi.addActionListener(e -> {
-            if (gestioneSalvataggioOModifica(-1, comboStatoInserimento)) {
+            if (gestioneSalvataggioOModifica(-1)) {
                 facade.salvaDati();
-                pulisciCampi(comboStatoInserimento);
+                pulisciCampi();
             }
         });
 
@@ -167,9 +186,9 @@ public class VideotecaGUI extends JFrame implements Observer{
             int rigaSelezionata = tabellaFilm.getSelectedRow();
             if (rigaSelezionata != -1) {
                 int id = (int) tableModel.getValueAt(rigaSelezionata, 0);
-                if (gestioneSalvataggioOModifica(id, comboStatoInserimento)) {
+                if (gestioneSalvataggioOModifica(id)) {
                     facade.salvaDati();
-                    pulisciCampi(comboStatoInserimento);
+                    pulisciCampi();
                     tabellaFilm.clearSelection();
                 }
             } else {
@@ -183,7 +202,7 @@ public class VideotecaGUI extends JFrame implements Observer{
                 int id = (int) tableModel.getValueAt(rigaSelezionata, 0);
                 facade.rimuoviFilm(id);
                 facade.salvaDati();
-                pulisciCampi(comboStatoInserimento);
+                pulisciCampi();
             } else {
                 JOptionPane.showMessageDialog(this, "Seleziona un film da rimuovere.");
             }
@@ -195,18 +214,29 @@ public class VideotecaGUI extends JFrame implements Observer{
         update();
     }
 
-    private boolean gestioneSalvataggioOModifica(int id, JComboBox<StatoVisione> comboStato) {
+
+    private boolean gestioneSalvataggioOModifica(int id) {
         try {
             String titolo = txtTitolo.getText().trim();
             String regista = txtRegista.getText().trim();
             int anno = Integer.parseInt(txtAnno.getText().trim());
             String genere = txtGenere.getText().trim();
-            int voto = Integer.parseInt(txtVoto.getText().trim());
-            StatoVisione stato = (StatoVisione) comboStato.getSelectedItem();
+            StatoVisione stato = (StatoVisione) comboStatoInserimento.getSelectedItem();
+            
+            int voto = 0; 
 
-            if (titolo.isEmpty() || regista.isEmpty() || genere.isEmpty() || voto < 1 || voto > 5) {
-                JOptionPane.showMessageDialog(this, "Verifica i dati (Voto ammesso: 1-5 stelle).");
+            if (titolo.isEmpty() || regista.isEmpty() || genere.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tutti i campi testuali devono essere compilati.");
                 return false;
+            }
+
+
+            if (stato == StatoVisione.VISTO) {
+                voto = Integer.parseInt(txtVoto.getText().trim());
+                if (voto < 1 || voto > 5) {
+                    JOptionPane.showMessageDialog(this, "La valutazione personale deve essere compresa tra 1 e 5 stelle.");
+                    return false;
+                }
             }
 
             DatiFilm dati = new DatiFilm(titolo, regista, anno, genere, voto, stato);
@@ -214,32 +244,29 @@ public class VideotecaGUI extends JFrame implements Observer{
             else facade.modificaFilm(id, dati);
             return true;
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Controlla i campi numerici.");
+            JOptionPane.showMessageDialog(this, "Controlla i campi numerici (L'anno è obbligatorio, il voto solo se Visto).");
             return false;
         }
     }
 
-    private void pulisciCampi(JComboBox<StatoVisione> comboStato) {
+    private void pulisciCampi() {
         txtTitolo.setText(""); txtRegista.setText(""); txtAnno.setText(""); 
-        txtGenere.setText(""); txtVoto.setText(""); comboStato.setSelectedIndex(0);
+        txtGenere.setText(""); txtVoto.setText(""); comboStatoInserimento.setSelectedIndex(0);
+        txtVoto.setEnabled(true); // Ripristina lo stato iniziale sbloccato
     }
 
     @Override
     public void update() {
         tableModel.setRowCount(0);
-
-        // Estrazione in tempo reale dello stato dei controlli grafici
         String querySearch = txtSearch.getText().trim();
         String tipoSearch = comboTipoSearch.getSelectedItem().toString();
         String genereFiltro = txtFiltroGenere.getText().trim();
         String statoFiltro = comboFiltroStato.getSelectedItem().toString();
         String criterioOrdine = comboOrdinamento.getSelectedItem().toString();
 
-
         List<FilmIF> datiFiltrati = facade.ottieniCatalogoFiltratoEOrdinato(
                 querySearch, tipoSearch, genereFiltro, statoFiltro, criterioOrdine
         );
-
 
         for (FilmIF f : datiFiltrati) {
             Object[] riga = {
