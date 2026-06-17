@@ -1,3 +1,6 @@
+package command;
+import model.Videoteca;
+
 public class ModificaFilmCommand implements Command {
     private final Videoteca videoteca;
     private final int id;

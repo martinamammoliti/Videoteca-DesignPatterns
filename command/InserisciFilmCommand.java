@@ -1,3 +1,6 @@
+package command;
+import model.Videoteca;
+
 public class InserisciFilmCommand implements Command{
     private final Videoteca videoteca;
     private final FilmIF film;

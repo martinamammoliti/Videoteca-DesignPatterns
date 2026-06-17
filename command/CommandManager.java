@@ -1,3 +1,4 @@
+package command;
 public class CommandManager {
     public void eseguiComando(Command comando){
         if(comando!=null){
