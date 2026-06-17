@@ -7,6 +7,7 @@ import java.util.List;
 import builder.*;
 import command.*;
 import strategy.*;
+import persistence.ArchivioFilm;
 
 public class VideotecaFacade {
     private final Videoteca videoteca;
@@ -14,6 +15,7 @@ public class VideotecaFacade {
     private final FilmBuilder builder;
     private final CommandManager commandManager;
     private final FilmQueryContext queryContext;
+    private final ArchivoFilm archivio;
     private int prossimoId=1;
 
     public VideotecaFacade(Videoteca videoteca){
@@ -22,6 +24,7 @@ public class VideotecaFacade {
         this.builder=new ConcreteFilmBuilder();
         this.commandManager=new CommandManager();
         this.queryContext=new FilmQueryContext();
+        this.archivio=new ArchivioFilm();
     }
 
     public void inserisciFilm(DatiFilm dati){
@@ -52,7 +55,9 @@ public class VideotecaFacade {
         return queryContext.eseguiQuery(videoteca.getElenco());
     }
 
-    public void caricaDatiFittizzi(List<FilmIF> filmPrecaricati){
+    public void caricaDati(){
+        System.out.println("Richiesta di caricamento dati dall'archivio...")
+        List<FilmIF> datiDaDisco=archivio.carica();
         videoteca.setElenco(filmPrecaricati);
     }
 }

@@ -24,7 +24,7 @@ public class Main {
 
         facade.modificaFilm(1, f1Modificato);
 
-        System.out.println("--- ESEGUO: Ricerca mirata del titolo 'Interstellar' ---");
+        System.out.println("- ESEGUO: Ricerca mirata del titolo 'Interstellar' -");
         List<FilmIF> risultatiRicerca = facade.cercaPerTitolo("Interstellar");
         System.out.println("Risultati trovati dalla strategia di ricerca: " + risultatiRicerca.size());
         for(FilmIF f : risultatiRicerca) {
@@ -32,8 +32,11 @@ public class Main {
         }
         System.out.println();
 
-        System.out.println("--- ESEGUO: Rimozione del Film con ID 1 ---");
+        System.out.println("- ESEGUO: Rimozione del Film con ID 1 -");
         facade.rimuoviFilm(1);
+
+        System.out.println("- ESEGUO: Caricamento del backup da HD -");
+        facade.caricaDati();
     }
 
 }
