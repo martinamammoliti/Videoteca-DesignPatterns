@@ -2,14 +2,16 @@ package facade;
 
 import model.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import observer.*;
 import builder.*;
 import command.*;
 import strategy.*;
 import persistence.ArchivioFilm;
 
-public class VideotecaFacade {
+public class VideotecaFacade implements Subject{
     private final Videoteca videoteca;
     private final FilmDirector director;
     private final FilmBuilder builder;
@@ -17,6 +19,7 @@ public class VideotecaFacade {
     private final FilmQueryContext queryContext;
     private final ArchivioFilm archivio;
     private int prossimoId=1;
+    private final List<Observer> observers = new ArrayList<>();
 
     public VideotecaFacade(Videoteca videoteca){
         this.videoteca=videoteca;
@@ -32,17 +35,19 @@ public class VideotecaFacade {
         FilmIF nuovoFilm=director.creaFilm(builder, id, dati);
         Command cmd=new InserisciFilmCommand(videoteca, nuovoFilm);
         commandManager.eseguiComando(cmd);
+        notifyObservers();
     }
 
     public void modificaFilm(int id, DatiFilm nuoviDati){
-        FilmIF filmModificato=director.creaFilm(builder, id, nuoviDati);
-        Command cmd=new ModificaFilmCommand(videoteca, id, filmModificato);
+        Command cmd=new ModificaFilmCommand(videoteca, id, nuoviDati);
         commandManager.eseguiComando(cmd);
+        notifyObservers();
     }
 
     public void rimuoviFilm(int id){
         Command cmd=new RimuoviFilmCommand(videoteca, id);
         commandManager.eseguiComando(cmd);
+        notifyObservers();
     }
 
     public List<FilmIF> ottieniCatalogoFiltratoEOrdinato(
@@ -54,13 +59,14 @@ public class VideotecaFacade {
 
         // 1. Gestione Ricerca Testuale tramite Context
         if (testo != null && !testo.isEmpty()) {
-            if ("Titolo".equalsIgnoreCase(tipo)) {
-                queryContext.setStrategy(new RicercaTitoloStrategy(testo));
-            } else if ("Regista".equalsIgnoreCase(tipo)) {
-                queryContext.setStrategy(new RicercaRegistaStrategy(testo));
-            }
+        if ("Titolo".equalsIgnoreCase(tipo)) {
+            queryContext.setStrategy(new RicercaTitoloStrategy(testo)); 
+            risultato = queryContext.eseguiQuery(risultato);
+        } else if ("Regista".equalsIgnoreCase(tipo)) {
+            queryContext.setStrategy(new RicercaRegistaStrategy(testo)); 
             risultato = queryContext.eseguiQuery(risultato);
         }
+    }
 
         // 2. Gestione Filtro Genere tramite Context
         if (genereFiltro != null && !genereFiltro.isEmpty() && !"Tutti".equalsIgnoreCase(genereFiltro)) {
@@ -76,8 +82,14 @@ public class VideotecaFacade {
         }
 
         // 4. Gestione Ordinamento tramite Context
-        if (criterioOrdinamento != null && !"Nessuno".equalsIgnoreCase(criterioOrdinamento)) {
-            queryContext.setStrategy(new OrdinamentoStrategy(criterioOrdinamento));
+       if ("TITOLO".equalsIgnoreCase(criterioOrdinamento)) {
+            queryContext.setStrategy(new OrdinamentoTitoloStrategy());
+            risultato = queryContext.eseguiQuery(risultato);
+        } else if ("ANNO".equalsIgnoreCase(criterioOrdinamento)) {
+            queryContext.setStrategy(new OrdinamentoAnnoStrategy());
+            risultato = queryContext.eseguiQuery(risultato);
+        } else if ("VALUTAZIONE".equalsIgnoreCase(criterioOrdinamento)) {
+            queryContext.setStrategy(new OrdinamentoValutazioneStrategy());
             risultato = queryContext.eseguiQuery(risultato);
         }
 
@@ -85,8 +97,7 @@ public class VideotecaFacade {
     }
 
     public List<FilmIF> ottieniCatalogoCompleto(){
-        queryContext.setStrategy(null);
-        return queryContext.eseguiQuery(videoteca.getElenco());
+        return videoteca.getElenco();
     }
 
     public void salvaDati() {
@@ -98,12 +109,24 @@ public class VideotecaFacade {
         System.out.println("[Facade] Richiesta di caricamento dati dall'archivio...");
         List<FilmIF> datiDaDisco = archivio.carica();
         
+        videoteca.svuota();
+
         for (FilmIF f : datiDaDisco) {
-            if (f.getId() >= prossimoId) {
-                prossimoId = f.getId() + 1;
-            }
+            videoteca.inserisci(f);
         }
         
-        videoteca.setElenco(datiDaDisco);
+        this.prossimoId = datiDaDisco.stream()
+                .mapToInt(FilmIF::getId)
+                .max()
+                .orElse(0) + 1; 
+        
+        notifyObservers();
+    }
+
+    @Override public void attach(Observer o) { observers.add(o); }
+    @Override public void detach(Observer o) { observers.remove(o); }
+    @Override
+    public void notifyObservers() {
+        for (Observer o : observers) { o.update(); }
     }
 }

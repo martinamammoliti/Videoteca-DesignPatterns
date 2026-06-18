@@ -20,15 +20,16 @@ import model.DatiFilm;
 import model.FilmIF;
 import model.StatoVisione;
 import model.Videoteca;
+import observer.Observer;
 
 public class VideotecaGUI extends JFrame implements Observer{
 
-    private final Videoteca videoteca;
     private final VideotecaFacade facade;
     
     private JTable tabellaFilm;
     private DefaultTableModel tableModel;
-    private JTextField txtTitolo, txtRegista, txtAnno, txtGenere, txtVoto;
+    private JTextField txtTitolo, txtRegista, txtAnno, txtGenere;
+    private StarRatingPanel panelVotoStelle;
     
     private JTextField txtSearch;
     private JComboBox<String> comboTipoSearch;
@@ -38,12 +39,16 @@ public class VideotecaGUI extends JFrame implements Observer{
     private JComboBox<StatoVisione> comboStatoInserimento;
 
     public VideotecaGUI(Videoteca videoteca, VideotecaFacade facade) {
-        this.videoteca = videoteca;
         this.facade = facade;
-        
-        this.videoteca.attach(this);
 
-        setTitle("🎬 Sistema di Gestione Videoteca - Layout Intelligente");
+        String[] colonne = {"ID", "Titolo", "Regista", "Anno", "Genere", "Voto (1-5 ★)", "Stato"};
+        tableModel = new DefaultTableModel(colonne, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        tabellaFilm = new JTable(tableModel);
+
+        setTitle("🎬 Sistema di Gestione Videoteca");
         setSize(1020, 620);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -60,7 +65,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         JButton btnApplica = new JButton("🔄 Applica Filtri e Ordina");
         JButton btnReset = new JButton("❌ Resetta");
 
-        panelNord.add(new JLabel("Cerca testo:"));
+        panelNord.add(new JLabel("Cerca titolo o regista:"));
         panelNord.add(txtSearch);
         panelNord.add(new JLabel("In campo:"));
         panelNord.add(comboTipoSearch);
@@ -78,12 +83,6 @@ public class VideotecaGUI extends JFrame implements Observer{
 
         add(panelNord, BorderLayout.NORTH);
 
-        String[] colonne = {"ID", "Titolo", "Regista", "Anno", "Genere", "Voto (1-5 ★)", "Stato"};
-        tableModel = new DefaultTableModel(colonne, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
-        tabellaFilm = new JTable(tableModel);
         add(new JScrollPane(tabellaFilm), BorderLayout.CENTER);
 
         JPanel panelInput = new JPanel(new GridLayout(2, 6, 5, 5));
@@ -93,7 +92,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         txtRegista = new JTextField();
         txtAnno = new JTextField();
         txtGenere = new JTextField();
-        txtVoto = new JTextField();
+        panelVotoStelle = new StarRatingPanel();
         comboStatoInserimento = new JComboBox<>(StatoVisione.values());
 
         panelInput.add(new JLabel("Titolo:"));
@@ -107,7 +106,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         panelInput.add(txtRegista);
         panelInput.add(txtAnno);
         panelInput.add(txtGenere);
-        panelInput.add(txtVoto);
+        panelInput.add(panelVotoStelle);
         panelInput.add(comboStatoInserimento);
 
         JPanel panelBottoni = new JPanel(new GridLayout(5, 1, 5, 5));
@@ -132,10 +131,9 @@ public class VideotecaGUI extends JFrame implements Observer{
         comboStatoInserimento.addActionListener(e -> {
             StatoVisione statocorrente = (StatoVisione) comboStatoInserimento.getSelectedItem();
             if (statocorrente == StatoVisione.DA_VEDERE || statocorrente == StatoVisione.IN_VISIONE) {
-                txtVoto.setText("");
-                txtVoto.setEnabled(false);
+                panelVotoStelle.setEnabled(false);
             } else {
-                txtVoto.setEnabled(true);
+                panelVotoStelle.setEnabled(true);
             }
         });
 
@@ -152,11 +150,11 @@ public class VideotecaGUI extends JFrame implements Observer{
                 comboStatoInserimento.setSelectedItem(statoCaricato);
 
                 if (statoCaricato == StatoVisione.DA_VEDERE || statoCaricato == StatoVisione.IN_VISIONE) {
-                    txtVoto.setText("");
-                    txtVoto.setEnabled(false);
+                    panelVotoStelle.setEnabled(false);
                 } else {
-                    txtVoto.setText(tableModel.getValueAt(riga, 5).toString());
-                    txtVoto.setEnabled(true);
+                    panelVotoStelle.setEnabled(true);
+                    int valutazioneCaricata = Integer.parseInt(tableModel.getValueAt(riga, 5).toString());
+                    panelVotoStelle.setRating(valutazioneCaricata);
                 }
             }
         });
@@ -205,6 +203,14 @@ public class VideotecaGUI extends JFrame implements Observer{
         btnSalvaBackup.addActionListener(e -> facade.salvaDati());
         btnCaricaBackup.addActionListener(e -> facade.caricaDati());
 
+        this.facade.attach(this);
+
+        try {
+            facade.caricaDati(); 
+        } catch (Exception e) {
+            System.out.println("Nessun archivio precedente trovato o errore di lettura.");
+        }
+
         update();
     }
 
@@ -223,9 +229,9 @@ public class VideotecaGUI extends JFrame implements Observer{
             }
 
             if (stato == StatoVisione.VISTO) {
-                voto = Integer.parseInt(txtVoto.getText().trim());
+                voto = panelVotoStelle.getRating();
                 if (voto < 1 || voto > 5) {
-                    JOptionPane.showMessageDialog(this, "La valutazione personale deve essere compresa tra 1 e 5 stelle.");
+                    JOptionPane.showMessageDialog(this, "Seleziona almeno una stella per i film visti.");
                     return false;
                 }
             }
@@ -242,8 +248,8 @@ public class VideotecaGUI extends JFrame implements Observer{
 
     private void pulisciCampi() {
         txtTitolo.setText(""); txtRegista.setText(""); txtAnno.setText(""); 
-        txtGenere.setText(""); txtVoto.setText(""); comboStatoInserimento.setSelectedIndex(0);
-        txtVoto.setEnabled(true);
+        txtGenere.setText(""); panelVotoStelle.setRating(0); comboStatoInserimento.setSelectedIndex(0);
+        panelVotoStelle.setEnabled(true);
     }
 
     @Override
@@ -260,10 +266,103 @@ public class VideotecaGUI extends JFrame implements Observer{
         );
 
         for (FilmIF f : datiFiltrati) {
+            String stelleTabella = "-";
+            if (f.getStatoVisione() == StatoVisione.VISTO) {
+                stelleTabella = "";
+                for (int i = 0; i < 5; i++) {
+                    stelleTabella += (i < f.getValutazione()) ? "\u2605" : "\u2606";
+                }
+            }
             Object[] riga = {
-                f.getId(), f.getTitolo(), f.getRegista(), f.getAnnoUscita(), f.getGenere(), f.getValutazione(), f.getStatoVisione()
+                f.getId(), f.getTitolo(), f.getRegista(), f.getAnnoUscita(), f.getGenere(), stelleTabella, f.getStatoVisione()
             };
             tableModel.addRow(riga);
+        }
+    }
+}
+
+class StarRatingPanel extends JPanel{
+    private final JLabel[] stars = new JLabel[5];
+    private int rating = 0;       
+    private boolean enabled = true;
+
+    private final String STELLA_PIENA = "\u2605"; // Equivale a ★
+    private final String STELLA_VUOTA = "\u2606"; // Equivale a ☆
+
+    public StarRatingPanel() {
+        setLayout(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        setOpaque(false); 
+        
+        for (int i = 0; i < 5; i++) {
+            final int index = i + 1;
+            stars[i] = new JLabel(STELLA_VUOTA);
+            
+            // Usiamo Font.DIALOG che garantisce il supporto ai simboli su Windows, Mac e Linux
+            stars[i].setFont(new Font(Font.DIALOG, Font.PLAIN, 24)); 
+            stars[i].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            
+            stars[i].addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mousePressed(java.awt.event.MouseEvent e) {
+                    if (enabled) {
+                        setRating(index); 
+                    }
+                }
+
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    if (enabled) {
+                        previewStars(index); 
+                    }
+                }
+
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    if (enabled) {
+                        updateStars(); 
+                    }
+                }
+            });
+            add(stars[i]);
+        }
+        updateStars();
+    }
+
+    public int getRating() { return rating; }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+        updateStars();
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) this.rating = 0; 
+        updateStars();
+    }
+
+    private void updateStars() {
+        for (int i = 0; i < 5; i++) {
+            if (i < rating) {
+                stars[i].setText(STELLA_PIENA); 
+                stars[i].setForeground(enabled ? new Color(255, 190, 0) : Color.LIGHT_GRAY); 
+            } else {
+                stars[i].setText(STELLA_VUOTA); 
+                stars[i].setForeground(Color.LIGHT_GRAY);
+            }
+        }
+    }
+
+    private void previewStars(int previewRating) {
+        for (int i = 0; i < 5; i++) {
+            if (i < previewRating) {
+                stars[i].setText(STELLA_PIENA);
+                stars[i].setForeground(new Color(255, 215, 0)); 
+            } else {
+                stars[i].setText(STELLA_VUOTA);
+                stars[i].setForeground(Color.LIGHT_GRAY);
+            }
         }
     }
 }
