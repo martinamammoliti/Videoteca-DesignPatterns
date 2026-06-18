@@ -13,7 +13,6 @@ import facade.*;
 import model.*;
 
 public class VideotecaTest {
-    private Videoteca videoteca;
     private VideotecaFacade facade;
 
     /**
@@ -22,8 +21,11 @@ public class VideotecaTest {
      */
     @BeforeEach
     public void setUp() {
-        this.videoteca = new Videoteca();
+        Videoteca videoteca = new Videoteca();
         this.facade = new VideotecaFacade(videoteca);
+        if (videoteca.getElenco() != null) {
+        videoteca.getElenco().clear(); 
+        }
     }
 
     @Test
@@ -34,7 +36,7 @@ public class VideotecaTest {
         facade.inserisciFilm(film1);
         facade.inserisciFilm(film2);
 
-        List<FilmIF> elenco = videoteca.getElenco();
+        List<FilmIF> elenco = facade.ottieniCatalogoCompleto();
 
         // Verifica che siano stati inseriti esattamente due film
         assertEquals(2, elenco.size(), "La videoteca dovrebbe contenere 2 film");
@@ -56,10 +58,10 @@ public class VideotecaTest {
         // 2. Prepariamo i nuovi dati modificati (cambiamo voto e stato)
         DatiFilm nuoviDati = new DatiFilm("Matrix", "Wachowski", 1999, "Azione", 5, StatoVisione.VISTO);
         
-        // Eseguiamo la modifica sull'ID 1
+        // Eseguiamo la modifica sull'ID 1 tramite Facade
         facade.modificaFilm(1, nuoviDati);
 
-        List<FilmIF> elenco = videoteca.getElenco();
+        List<FilmIF> elenco = facade.ottieniCatalogoCompleto();
         
         assertEquals(1, elenco.size(), "La dimensione del catalogo non deve cambiare dopo una modifica");
         assertEquals(5, elenco.get(0).getValutazione(), "Il voto avrebbe dovuto aggiornarsi a 5");
@@ -68,15 +70,20 @@ public class VideotecaTest {
 
     @Test
     public void testRimuoviFilm() {
+        System.out.println("=== INVESTIGAZIONE FILM FANTASMA ===");
+        for (FilmIF f : facade.ottieniCatalogoCompleto()) {
+            System.out.println(" -> Trovato: " + f.getTitolo() + " (ID: " + f.getId() + ")");
+        }
+        System.out.println("====================================");
         DatiFilm film = new DatiFilm("Avatar", "Cameron", 2009, "Sci-Fi", 4, StatoVisione.VISTO);
         facade.inserisciFilm(film);
         
-        assertEquals(1, videoteca.getElenco().size());
+        assertEquals(1, facade.ottieniCatalogoCompleto().size());
 
         // Rimozione del film appena inserito (ID = 1)
         facade.rimuoviFilm(1);
 
-        assertTrue(videoteca.getElenco().isEmpty(), "L'elenco dovrebbe essere vuoto dopo la rimozione");
+        assertTrue(facade.ottieniCatalogoCompleto().isEmpty(), "L'elenco dovrebbe essere vuoto dopo la rimozione");
     }
 
     @Test
@@ -86,7 +93,7 @@ public class VideotecaTest {
         facade.inserisciFilm(new DatiFilm("Film B", "Regista 2", 2021, "Azione", 5, StatoVisione.VISTO));
         facade.inserisciFilm(new DatiFilm("Film C", "Regista 3", 2022, "Commedia", 2, StatoVisione.DA_VEDERE));
 
-        // Richiediamo tramite Facade solo i film con stato "VISTO"
+        // Richiediamo tramite Facade solo i film con stato "VISTO" 
         List<FilmIF> filtrati = facade.ottieniCatalogoFiltratoEOrdinato(null, null, null, "VISTO", null);
 
         // Ci aspettiamo 2 film (Film A e Film B)
