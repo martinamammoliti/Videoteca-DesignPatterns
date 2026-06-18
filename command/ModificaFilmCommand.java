@@ -4,16 +4,19 @@ import model.*;
 public class ModificaFilmCommand implements Command {
     private final Videoteca videoteca;
     private final int id;
-    private final FilmIF nuovoFilm;
+    private final DatiFilm nuoviDati;
 
-    public ModificaFilmCommand(Videoteca videoteca, int id, FilmIF nuovoFilm){
+    public ModificaFilmCommand(Videoteca videoteca, int id, DatiFilm dati){
         this.videoteca=videoteca;
         this.id=id;
-        this.nuovoFilm=nuovoFilm;
+        this.nuoviDati=dati;
     }
 
     @Override
     public void execute(){
-        videoteca.modifica(id, nuovoFilm);
+        FilmIF film = videoteca.trovaFilmPerId(id);
+        if (film != null) {
+            film.aggiornaDati(nuoviDati);
+        }
     }
 }

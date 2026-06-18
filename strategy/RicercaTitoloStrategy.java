@@ -1,24 +1,17 @@
 package strategy;
 
-import java.util.ArrayList;
 import java.util.List;
 import model.*;
 public class RicercaTitoloStrategy implements FilmQueryStrategy{
     private final String titoloTarget;
 
     public RicercaTitoloStrategy(String titoloTarget){
-        this.titoloTarget=titoloTarget;
+        this.titoloTarget=titoloTarget.trim().toLowerCase();
     }
 
     @Override
     public List<FilmIF> eseguiQuery(List<FilmIF> film){
-        List<FilmIF> risultato=new ArrayList<>();
-        for(FilmIF f:film){
-            if(f.getTitolo().equalsIgnoreCase(titoloTarget)){
-                risultato.add(f);
-            }
-        }
-        return risultato;
+        return film.stream().filter(f -> f.getTitolo().toLowerCase().contains(titoloTarget.toLowerCase())).toList();
     }
 
 }

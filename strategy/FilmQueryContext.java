@@ -12,10 +12,10 @@ public class FilmQueryContext{
         this.strategy=strategy;
     }
 
-    public List<FilmIF> eseguiQuery(List<FilmIF> film){
+    public List<FilmIF> eseguiQuery(List<FilmIF> catalogo){
         if(strategy==null)
-            return film;
-        return strategy.eseguiQuery(film);
+            return catalogo;
+        return strategy.eseguiQuery(catalogo);
     }
 
 }

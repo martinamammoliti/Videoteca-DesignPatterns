@@ -59,9 +59,7 @@ public class ConcreteFilmBuilder implements FilmBuilder{
 
     @Override
     public FilmIF ottieniProdotto(){
-        Film film=new Film(id, titolo, regista, anno, genere, valutazione, stato);
-        this.reset();
-        return film;
+        return new Film(id, titolo, regista, anno, genere, valutazione, stato);
     }
     
 }

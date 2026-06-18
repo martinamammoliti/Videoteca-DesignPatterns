@@ -7,4 +7,5 @@ public interface FilmIF {
     String getGenere();
     int getValutazione();
     StatoVisione getStatoVisione();
+    void aggiornaDati(DatiFilm dati);
 }

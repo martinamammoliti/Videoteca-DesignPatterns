@@ -1,20 +1,22 @@
 package view;
 
 import model.*;
+import observer.Observer;
+import facade.*;
 import java.util.List;
 
 public class VistaTabellare implements Observer{
-    private final Videoteca videoteca;
+    private final VideotecaFacade videotecaFacade;
 
-    public VistaTabellare(Videoteca videoteca){
-        this.videoteca=videoteca;
-        this.videoteca.attach(this);
+    public VistaTabellare(VideotecaFacade videotecaFacade){
+        this.videotecaFacade=videotecaFacade;
+        this.videotecaFacade.attach(this);
     }
 
     @Override
     public void update(){
         System.out.println("\n[UI] Riceuto segnale di update. Richiedo i dati...");
-        List<FilmIF> datiAggiornati=videoteca.getElenco();
+        List<FilmIF> datiAggiornati=videotecaFacade.ottieniCatalogoCompleto();
         mostra(datiAggiornati);
     }
 

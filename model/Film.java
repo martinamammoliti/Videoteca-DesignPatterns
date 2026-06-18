@@ -2,12 +2,12 @@ package model;
 
 public class Film implements FilmIF{
     private final int id;
-    private final String titolo;
-    private final String regista;
-    private final int annoUscita;
-    private final String genere;
-    private final int valutazione;
-    private final StatoVisione statoVisione;
+    private String titolo;
+    private String regista;
+    private int annoUscita;
+    private String genere;
+    private int valutazione;
+    private StatoVisione statoVisione;
 
     public Film(int id, String titolo, String regista, int annoUscita, String genere, int valutazione, StatoVisione statoVisione) {
         this.id = id;
@@ -27,4 +27,13 @@ public class Film implements FilmIF{
     @Override public int getValutazione() { return valutazione; }
     @Override public StatoVisione getStatoVisione() { return statoVisione; }
 
+    @Override
+    public void aggiornaDati(DatiFilm dati){
+        this.titolo = dati.getTitolo();
+        this.regista = dati.getRegista();
+        this.annoUscita = dati.getAnnoUscita();
+        this.genere = dati.getGenere();
+        this.valutazione = dati.getValutazione();
+        this.statoVisione = dati.getStatoVisione();
+    }
 }
