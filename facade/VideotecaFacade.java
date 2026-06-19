@@ -11,14 +11,13 @@ import command.*;
 import strategy.*;
 import persistence.ArchivioFilm;
 
-public class VideotecaFacade extends Subject{
+public class VideotecaFacade{
     private final Videoteca videoteca;
     private final FilmDirector director;
     private final FilmBuilder builder;
     private final CommandManager commandManager;
     private final FilmQueryContext queryContext;
     private final ArchivioFilm archivio;
-    private int prossimoId=1;
 
     public VideotecaFacade(Videoteca videoteca){
         this.videoteca=videoteca;
@@ -30,68 +29,58 @@ public class VideotecaFacade extends Subject{
     }
 
     public void inserisciFilm(DatiFilm dati){
-        int id=prossimoId++;
+        int id=videoteca.prossimoId();
         FilmIF nuovoFilm=director.creaFilm(builder, id, dati);
         Command cmd=new InserisciFilmCommand(videoteca, nuovoFilm);
         commandManager.eseguiComando(cmd);
-        salvaDati();
-        notifyObservers();
+        
     }
 
     public void modificaFilm(int id, DatiFilm nuoviDati){
         Command cmd=new ModificaFilmCommand(videoteca, id, nuoviDati);
         commandManager.eseguiComando(cmd);
-        salvaDati();
-        notifyObservers();
     }
 
     public void rimuoviFilm(int id){
         Command cmd=new RimuoviFilmCommand(videoteca, id);
         commandManager.eseguiComando(cmd);
-        salvaDati();
-        notifyObservers();
     }
 
-    public List<FilmIF> ottieniCatalogoFiltratoEOrdinato(
-        String testo, String tipo, 
-        String genereFiltro, String statoFiltro, 
-        String criterioOrdinamento) {
-        
+    public List<FilmIF> ottieniCatalogoFiltratoEOrdinato(String query, String tipo, String genere, String stato, String ordine) {
         List<FilmIF> risultato = videoteca.getElenco();
 
-        // 1. Gestione Ricerca Testuale tramite Context
-        if (testo != null && !testo.isEmpty()) {
-        if ("Titolo".equalsIgnoreCase(tipo)) {
-            queryContext.setStrategy(new RicercaTitoloStrategy(testo)); 
-            risultato = queryContext.eseguiQuery(risultato);
-        } else if ("Regista".equalsIgnoreCase(tipo)) {
-            queryContext.setStrategy(new RicercaRegistaStrategy(testo)); 
-            risultato = queryContext.eseguiQuery(risultato);
-        }
-    }
-
-        // 2. Gestione Filtro Genere tramite Context
-        if (genereFiltro != null && !genereFiltro.isEmpty() && !"Tutti".equalsIgnoreCase(genereFiltro)) {
-            queryContext.setStrategy(new FiltroGenereStrategy(genereFiltro));
+        // 1. Cerca per testo (Titolo o Regista)
+        if (!query.isEmpty()) {
+            if (tipo.equalsIgnoreCase("Titolo")) {
+                queryContext.setStrategy(new RicercaTitoloStrategy(query));
+            } else if (tipo.equalsIgnoreCase("Regista")) {
+                queryContext.setStrategy(new RicercaRegistaStrategy(query));
+            }
             risultato = queryContext.eseguiQuery(risultato);
         }
 
-        // 3. Gestione Filtro Stato tramite Context
-        if (statoFiltro != null && !"Tutti".equalsIgnoreCase(statoFiltro)) {
-            StatoVisione stato = StatoVisione.valueOf(statoFiltro);
-            queryContext.setStrategy(new FiltroStatoStrategy(stato));
+        // 2. Filtra per Genere
+        if (!genere.isEmpty()) {
+            queryContext.setStrategy(new FiltroGenereStrategy(genere));
             risultato = queryContext.eseguiQuery(risultato);
         }
 
-        // 4. Gestione Ordinamento tramite Context
-       if ("TITOLO".equalsIgnoreCase(criterioOrdinamento)) {
-            queryContext.setStrategy(new OrdinamentoTitoloStrategy());
+        // 3. Filtra per Stato Visione
+        if (!stato.equalsIgnoreCase("Tutti")) {
+            StatoVisione sv = StatoVisione.valueOf(stato);
+            queryContext.setStrategy(new FiltroStatoStrategy(sv));
             risultato = queryContext.eseguiQuery(risultato);
-        } else if ("ANNO".equalsIgnoreCase(criterioOrdinamento)) {
-            queryContext.setStrategy(new OrdinamentoAnnoStrategy());
-            risultato = queryContext.eseguiQuery(risultato);
-        } else if ("VALUTAZIONE".equalsIgnoreCase(criterioOrdinamento)) {
-            queryContext.setStrategy(new OrdinamentoValutazioneStrategy());
+        }
+
+        // 4. Ordina i risultati
+        if (!ordine.equalsIgnoreCase("Nessuno")) {
+            if (ordine.equalsIgnoreCase("Titolo")) {
+                queryContext.setStrategy(new OrdinamentoTitoloStrategy());
+            } else if (ordine.equalsIgnoreCase("Anno")) {
+                queryContext.setStrategy(new OrdinamentoAnnoStrategy());
+            } else if (ordine.equalsIgnoreCase("Valutazione")) {
+                queryContext.setStrategy(new OrdinamentoValutazioneStrategy());
+            }
             risultato = queryContext.eseguiQuery(risultato);
         }
 
@@ -108,21 +97,9 @@ public class VideotecaFacade extends Subject{
     }
 
     public void caricaDati() {
-        System.out.println("[Facade] Richiesta di caricamento dati dall'archivio...");
-        List<FilmIF> datiDaDisco = archivio.carica();
-        
-        videoteca.svuota();
-
-        for (FilmIF f : datiDaDisco) {
-            videoteca.inserisci(f);
-        }
-        
-        this.prossimoId = datiDaDisco.stream()
-                .mapToInt(FilmIF::getId)
-                .max()
-                .orElse(0) + 1; 
-        
-        notifyObservers();
+        // Carica la lista da file e ripristina lo stato interno del modello videoteca
+        List<FilmIF> filmCaricati = archivio.carica();
+        videoteca.setElenco(filmCaricati);
     }
 
 }

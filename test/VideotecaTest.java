@@ -94,7 +94,7 @@ public class VideotecaTest {
         facade.inserisciFilm(new DatiFilm("Film C", "Regista 3", 2022, "Commedia", 2, StatoVisione.DA_VEDERE));
 
         // Richiediamo tramite Facade solo i film con stato "VISTO" 
-        List<FilmIF> filtrati = facade.ottieniCatalogoFiltratoEOrdinato(null, null, null, "VISTO", null);
+        List<FilmIF> filtrati = facade.ottieniCatalogoFiltratoEOrdinato("", "", "", "VISTO", "");
 
         // Ci aspettiamo 2 film (Film A e Film B)
         assertEquals(2, filtrati.size(), "Dovrebbero esserci solo 2 film nello stato VISTO");

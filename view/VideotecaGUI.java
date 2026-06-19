@@ -153,7 +153,13 @@ public class VideotecaGUI extends JFrame implements Observer{
                     panelVotoStelle.setEnabled(false);
                 } else {
                     panelVotoStelle.setEnabled(true);
-                    int valutazioneCaricata = Integer.parseInt(tableModel.getValueAt(riga, 5).toString());
+                    String stelleString = tableModel.getValueAt(riga, 5).toString();
+                    int valutazioneCaricata = 0;
+                    for (char c : stelleString.toCharArray()) {
+                        if (c == '\u2605') {
+                            valutazioneCaricata++;
+                        }
+                    }
                     panelVotoStelle.setRating(valutazioneCaricata);
                 }
             }
@@ -203,7 +209,7 @@ public class VideotecaGUI extends JFrame implements Observer{
         btnSalvaBackup.addActionListener(e -> facade.salvaDati());
         btnCaricaBackup.addActionListener(e -> facade.caricaDati());
 
-        this.facade.attach(this);
+        videoteca.attach(this);
 
         try {
             facade.caricaDati(); 
