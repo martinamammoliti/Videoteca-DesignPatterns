@@ -11,7 +11,7 @@ import command.*;
 import strategy.*;
 import persistence.ArchivioFilm;
 
-public class VideotecaFacade implements Subject{
+public class VideotecaFacade extends Subject{
     private final Videoteca videoteca;
     private final FilmDirector director;
     private final FilmBuilder builder;
@@ -19,7 +19,6 @@ public class VideotecaFacade implements Subject{
     private final FilmQueryContext queryContext;
     private final ArchivioFilm archivio;
     private int prossimoId=1;
-    private final List<Observer> observers = new ArrayList<>();
 
     public VideotecaFacade(Videoteca videoteca){
         this.videoteca=videoteca;
@@ -35,18 +34,21 @@ public class VideotecaFacade implements Subject{
         FilmIF nuovoFilm=director.creaFilm(builder, id, dati);
         Command cmd=new InserisciFilmCommand(videoteca, nuovoFilm);
         commandManager.eseguiComando(cmd);
+        salvaDati();
         notifyObservers();
     }
 
     public void modificaFilm(int id, DatiFilm nuoviDati){
         Command cmd=new ModificaFilmCommand(videoteca, id, nuoviDati);
         commandManager.eseguiComando(cmd);
+        salvaDati();
         notifyObservers();
     }
 
     public void rimuoviFilm(int id){
         Command cmd=new RimuoviFilmCommand(videoteca, id);
         commandManager.eseguiComando(cmd);
+        salvaDati();
         notifyObservers();
     }
 
@@ -123,10 +125,4 @@ public class VideotecaFacade implements Subject{
         notifyObservers();
     }
 
-    @Override public void attach(Observer o) { observers.add(o); }
-    @Override public void detach(Observer o) { observers.remove(o); }
-    @Override
-    public void notifyObservers() {
-        for (Observer o : observers) { o.update(); }
-    }
 }
