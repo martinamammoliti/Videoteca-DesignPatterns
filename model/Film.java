@@ -1,6 +1,6 @@
 package model;
 
-public class Film implements FilmIF{
+public class Film implements FilmIF {
     private final int id;
     private String titolo;
     private String regista;
@@ -19,21 +19,28 @@ public class Film implements FilmIF{
         this.statoVisione = statoVisione;
     }
 
-    @Override public int getId() { return id; }
-    @Override public String getTitolo() { return titolo; }
-    @Override public String getRegista() { return regista; }
-    @Override public int getAnnoUscita() { return annoUscita; }
-    @Override public String getGenere() { return genere; }
-    @Override public int getValutazione() { return valutazione; }
-    @Override public StatoVisione getStatoVisione() { return statoVisione; }
+    @Override
+    public int getId() { return id; }
+    @Override
+    public String getTitolo() { return titolo; }
+    @Override
+    public String getRegista() { return regista; }
+    @Override
+    public int getAnnoUscita() { return annoUscita; }
+    @Override
+    public String getGenere() { return genere; }
+    @Override
+    public int getValutazione() { return valutazione; }
+    @Override
+    public StatoVisione getStatoVisione() { return statoVisione; }
 
     @Override
-    public void aggiornaDati(DatiFilm dati){
-        this.titolo = dati.getTitolo();
-        this.regista = dati.getRegista();
-        this.annoUscita = dati.getAnnoUscita();
-        this.genere = dati.getGenere();
-        this.valutazione = dati.getValutazione();
-        this.statoVisione = dati.getStatoVisione();
+    public void aggiornaDati(DatiFilm nuoviDati) {
+        this.titolo = nuoviDati.getTitolo();
+        this.regista = nuoviDati.getRegista();
+        this.annoUscita = nuoviDati.getAnnoUscita();
+        this.genere = nuoviDati.getGenere();
+        this.valutazione = nuoviDati.getValutazione();
+        this.statoVisione = nuoviDati.getStatoVisione();
     }
 }

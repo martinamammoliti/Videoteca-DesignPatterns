@@ -11,7 +11,13 @@ public class InserisciFilmCommand implements Command{
     }
 
     @Override
-    public void execute(){
+    public boolean doIt() {
         videoteca.inserisci(film);
+        return true; 
+    }
+
+    @Override
+    public void undoIt() {
+        videoteca.elimina(film.getId());
     }
 }

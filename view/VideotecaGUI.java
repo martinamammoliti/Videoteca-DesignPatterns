@@ -22,7 +22,7 @@ import model.StatoVisione;
 import model.Videoteca;
 import observer.Observer;
 
-public class VideotecaGUI extends JFrame implements Observer{
+public class VideotecaGUI extends JFrame implements Observer {
 
     private final VideotecaFacade facade;
     
@@ -109,25 +109,25 @@ public class VideotecaGUI extends JFrame implements Observer{
         panelInput.add(panelVotoStelle);
         panelInput.add(comboStatoInserimento);
 
-        JPanel panelBottoni = new JPanel(new GridLayout(5, 1, 5, 5));
+        JPanel panelBottoni = new JPanel(new GridLayout(7, 1, 5, 5));
         JButton btnAggiungi = new JButton("Aggiungi Film");
         JButton btnModifica = new JButton("Modifica Selezionato");
         JButton btnRimuovi = new JButton("Rimuovi Selezionato");
-        JButton btnSalvaBackup = new JButton("Salva in Archivio");
-        JButton btnCaricaBackup = new JButton("Carica da Archivio");
-
+        
+        JButton btnUndo = new JButton("↩️Annulla");
+        JButton btnRedo = new JButton("↪️Ripristina");
+        
         panelBottoni.add(btnAggiungi);
         panelBottoni.add(btnModifica);
         panelBottoni.add(btnRimuovi);
-        panelBottoni.add(btnSalvaBackup);
-        panelBottoni.add(btnCaricaBackup);
+        panelBottoni.add(btnUndo);
+        panelBottoni.add(btnRedo);
 
         JPanel southContainer = new JPanel(new BorderLayout());
         southContainer.add(panelInput, BorderLayout.CENTER);
         southContainer.add(panelBottoni, BorderLayout.EAST);
         add(southContainer, BorderLayout.SOUTH);
 
-       
         comboStatoInserimento.addActionListener(e -> {
             StatoVisione statocorrente = (StatoVisione) comboStatoInserimento.getSelectedItem();
             if (statocorrente == StatoVisione.DA_VEDERE || statocorrente == StatoVisione.IN_VISIONE) {
@@ -137,7 +137,6 @@ public class VideotecaGUI extends JFrame implements Observer{
             }
         });
 
-       
         tabellaFilm.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tabellaFilm.getSelectedRow() != -1) {
                 int riga = tabellaFilm.getSelectedRow();
@@ -206,8 +205,19 @@ public class VideotecaGUI extends JFrame implements Observer{
             }
         });
 
-        btnSalvaBackup.addActionListener(e -> facade.salvaDati());
-        btnCaricaBackup.addActionListener(e -> facade.caricaDati());
+        btnUndo.addActionListener(e -> {
+            facade.undo();
+            facade.salvaDati(); 
+            pulisciCampi();
+            tabellaFilm.clearSelection();
+        });
+
+        btnRedo.addActionListener(e -> {
+            facade.redo();
+            facade.salvaDati(); 
+            pulisciCampi();
+            tabellaFilm.clearSelection();
+        });
 
         videoteca.attach(this);
 
@@ -286,7 +296,6 @@ public class VideotecaGUI extends JFrame implements Observer{
         }
     }
 }
-
 class StarRatingPanel extends JPanel{
     private final JLabel[] stars = new JLabel[5];
     private int rating = 0;       

@@ -2,16 +2,14 @@ package facade;
 
 import model.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import observer.*;
 import builder.*;
 import command.*;
 import strategy.*;
 import persistence.ArchivioFilm;
 
-public class VideotecaFacade{
+public class VideotecaFacade {
     private final Videoteca videoteca;
     private final FilmDirector director;
     private final FilmBuilder builder;
@@ -19,30 +17,38 @@ public class VideotecaFacade{
     private final FilmQueryContext queryContext;
     private final ArchivioFilm archivio;
 
-    public VideotecaFacade(Videoteca videoteca){
-        this.videoteca=videoteca;
-        this.director=new FilmDirector();
-        this.builder=new ConcreteFilmBuilder();
-        this.commandManager=new CommandManager();
-        this.queryContext=new FilmQueryContext();
-        this.archivio=new ArchivioFilm();
+    public VideotecaFacade(Videoteca videoteca) {
+        this.videoteca = videoteca;
+        this.director = new FilmDirector();
+        this.builder = new ConcreteFilmBuilder();
+        this.commandManager = new CommandManager();
+        this.queryContext = new FilmQueryContext();
+        this.archivio = new ArchivioFilm();
     }
 
-    public void inserisciFilm(DatiFilm dati){
-        int id=videoteca.prossimoId();
-        FilmIF nuovoFilm=director.creaFilm(builder, id, dati);
-        Command cmd=new InserisciFilmCommand(videoteca, nuovoFilm);
+
+    public void undo() {
+        commandManager.undo();
+    }
+
+    public void redo() {
+        commandManager.redo();
+    }
+
+    public void inserisciFilm(DatiFilm dati) {
+        int id = videoteca.prossimoId(); 
+        FilmIF nuovoFilm = director.creaFilm(builder, id, dati);
+        Command cmd = new InserisciFilmCommand(videoteca, nuovoFilm);
         commandManager.eseguiComando(cmd);
-        
     }
 
-    public void modificaFilm(int id, DatiFilm nuoviDati){
-        Command cmd=new ModificaFilmCommand(videoteca, id, nuoviDati);
+    public void modificaFilm(int id, DatiFilm nuoviDati) {
+        Command cmd = new ModificaFilmCommand(videoteca, id, nuoviDati);
         commandManager.eseguiComando(cmd);
     }
 
-    public void rimuoviFilm(int id){
-        Command cmd=new RimuoviFilmCommand(videoteca, id);
+    public void rimuoviFilm(int id) {
+        Command cmd = new RimuoviFilmCommand(videoteca, id);
         commandManager.eseguiComando(cmd);
     }
 

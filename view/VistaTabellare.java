@@ -28,9 +28,17 @@ public class VistaTabellare implements Observer {
             System.out.println("Il catalogo è vuoto.");
         } else {
             for(FilmIF f : lista){
+                String stringaVoto = (f.getStatoVisione() == StatoVisione.VISTO) 
+                        ? f.getValutazione() + "/5 ★" 
+                        : "-";
                 
-                System.out.println(String.format("[%d] %s - Regia: %s (%d) | [%s] Voto: %d/5 ★", 
-                    f.getId(), f.getTitolo(), f.getRegista(), f.getAnnoUscita(), f.getStatoVisione(), f.getValutazione()
+                System.out.println(String.format("[%d] %s - Regia: %s (%d) | [%s] Voto: %s", 
+                    f.getId(), 
+                    f.getTitolo(), 
+                    f.getRegista(), 
+                    f.getAnnoUscita(), 
+                    f.getStatoVisione(), 
+                    stringaVoto
                 ));
             }
         }

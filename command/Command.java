@@ -1,4 +1,5 @@
 package command;
 public interface Command {
-    void execute();
+    boolean doIt();
+    void undoIt();
 }

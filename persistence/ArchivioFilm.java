@@ -27,8 +27,8 @@ public class ArchivioFilm {
         System.out.println("Salvataggio dati su " + FILE_NAME + "...");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
             for (FilmIF f : listaFilm) {
-                // Costruiamo la riga CSV usando il punto e virgola come separatore
-                String riga = String.format("%d;%s;%s;%d;%s;%d;%s",
+                // Costruiamo la riga CSV usando | come separatore in modo che se un film contiene il punto e virgola nel titolo possa comunque essere inserito senza esser visto come separatore
+                String riga = String.format("%d|%s|%s|%d|%s|%d|%s",
                         f.getId(),
                         f.getTitolo(),
                         f.getRegista(),
@@ -62,7 +62,7 @@ public class ArchivioFilm {
             while ((linea = reader.readLine()) != null) {
                 if (linea.trim().isEmpty()) continue;
 
-                String[] token = linea.split(";");
+                String[] token = linea.split("\\|");
                 
                 int id = Integer.parseInt(token[0]);
                 String titolo = token[1];
