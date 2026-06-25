@@ -51,4 +51,17 @@ public class CommandManager {
             history.removeLast(); 
         }
     }
+
+    public boolean canUndo() {
+        return !history.isEmpty();
+    }
+
+    public boolean canRedo() {
+        return !redoList.isEmpty();
+    }
+
+    public void svuotaCronologia() {
+        this.history.clear();
+        this.redoList.clear();
+    }
 }

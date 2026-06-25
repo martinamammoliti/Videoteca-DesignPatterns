@@ -38,6 +38,9 @@ public class VideotecaGUI extends JFrame implements Observer {
     private JComboBox<String> comboOrdinamento;
     private JComboBox<StatoVisione> comboStatoInserimento;
 
+    private JButton btnUndo;
+    private JButton btnRedo;
+
     public VideotecaGUI(Videoteca videoteca, VideotecaFacade facade) {
         this.facade = facade;
 
@@ -114,8 +117,8 @@ public class VideotecaGUI extends JFrame implements Observer {
         JButton btnModifica = new JButton("Modifica Selezionato");
         JButton btnRimuovi = new JButton("Rimuovi Selezionato");
         
-        JButton btnUndo = new JButton("↩️Annulla");
-        JButton btnRedo = new JButton("↪️Ripristina");
+        btnUndo = new JButton("↩️Annulla");
+        btnRedo = new JButton("↪️Ripristina");
         
         panelBottoni.add(btnAggiungi);
         panelBottoni.add(btnModifica);
@@ -176,40 +179,64 @@ public class VideotecaGUI extends JFrame implements Observer {
             if (gestioneSalvataggioOModifica(-1)) {
                 facade.salvaDati();
                 pulisciCampi();
+                update();
             }
         });
 
         btnModifica.addActionListener(e -> {
-            int rigaSelezionata = tabellaFilm.getSelectedRow();
-            if (rigaSelezionata != -1) {
+        int rigaSelezionata = tabellaFilm.getSelectedRow();
+        if (rigaSelezionata != -1) {
+            int conferma = JOptionPane.showConfirmDialog(
+                this, 
+            "Sei sicuro di voler salvare le modifiche apportate a questo film?", 
+            "Conferma Modifica", 
+                JOptionPane.YES_NO_OPTION, 
+                JOptionPane.QUESTION_MESSAGE
+            );
+        
+            if (conferma == JOptionPane.YES_OPTION) {
                 int id = (int) tableModel.getValueAt(rigaSelezionata, 0);
                 if (gestioneSalvataggioOModifica(id)) {
                     facade.salvaDati();
                     pulisciCampi();
                     tabellaFilm.clearSelection();
+                    update();
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "Seleziona un film per modificarlo.");
             }
-        });
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleziona un film per modificarlo.");
+        }
+    });
 
         btnRimuovi.addActionListener(e -> {
-            int rigaSelezionata = tabellaFilm.getSelectedRow();
-            if (rigaSelezionata != -1) {
+        int rigaSelezionata = tabellaFilm.getSelectedRow();
+        if (rigaSelezionata != -1) {
+            int conferma = JOptionPane.showConfirmDialog(
+                this, 
+                "Sei sicuro di voler eliminare definitivamente questo film dal catalogo?", 
+                "Conferma Eliminazione", 
+                JOptionPane.YES_NO_OPTION, 
+                JOptionPane.WARNING_MESSAGE
+            );
+        
+            if (conferma == JOptionPane.YES_OPTION) {
                 int id = (int) tableModel.getValueAt(rigaSelezionata, 0);
                 facade.rimuoviFilm(id);
                 facade.salvaDati();
                 pulisciCampi();
-            } else {
-                JOptionPane.showMessageDialog(this, "Seleziona un film da rimuovere.");
+                update();
             }
-        });
+        } else {
+            JOptionPane.showMessageDialog(this, "Seleziona un film da rimuovere.");
+        }
+    });
 
         btnUndo.addActionListener(e -> {
             facade.undo();
             facade.salvaDati(); 
             pulisciCampi();
             tabellaFilm.clearSelection();
+            update();
         });
 
         btnRedo.addActionListener(e -> {
@@ -217,6 +244,7 @@ public class VideotecaGUI extends JFrame implements Observer {
             facade.salvaDati(); 
             pulisciCampi();
             tabellaFilm.clearSelection();
+            update();
         });
 
         videoteca.attach(this);
@@ -231,35 +259,54 @@ public class VideotecaGUI extends JFrame implements Observer {
     }
 
     private boolean gestioneSalvataggioOModifica(int id) {
-        try {
-            String titolo = txtTitolo.getText().trim();
-            String regista = txtRegista.getText().trim();
-            int anno = Integer.parseInt(txtAnno.getText().trim());
-            String genere = txtGenere.getText().trim();
-            StatoVisione stato = (StatoVisione) comboStatoInserimento.getSelectedItem();
-            int voto = 0;
+        String titolo = txtTitolo.getText().trim();
+        String regista = txtRegista.getText().trim();
+        String annoStr = txtAnno.getText().trim(); // Leggiamo il testo grezzo dell'anno
+        String genere = txtGenere.getText().trim();
+        StatoVisione stato = (StatoVisione) comboStatoInserimento.getSelectedItem();
+        int voto = 0;
 
-            if (titolo.isEmpty() || regista.isEmpty() || genere.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Tutti i campi testuali devono essere compilati.");
-                return false;
-            }
-
-            if (stato == StatoVisione.VISTO) {
-                voto = panelVotoStelle.getRating();
-                if (voto < 1 || voto > 5) {
-                    JOptionPane.showMessageDialog(this, "Seleziona almeno una stella per i film visti.");
-                    return false;
-                }
-            }
-
-            DatiFilm dati = new DatiFilm(titolo, regista, anno, genere, voto, stato);
-            if (id == -1) facade.inserisciFilm(dati);
-            else facade.modificaFilm(id, dati);
-            return true;
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Controlla i campi numerici.");
+        if (titolo.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Il campo 'Titolo' non può essere vuoto.", "Errore: Campo Mancante", JOptionPane.ERROR_MESSAGE);
             return false;
         }
+        if (regista.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Il campo 'Regista' non può essere vuoto.", "Errore: Campo Mancante", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (annoStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Il campo 'Anno Uscita' non può essere vuoto.", "Errore: Campo Mancante", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (genere.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Il campo 'Genere' non può essere vuoto.", "Errore: Campo Mancante", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        int anno;
+        try {
+            anno = Integer.parseInt(annoStr);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "L'anno di uscita deve essere un numero intero valido (es. 2024).", "Errore: Formato Non Valido", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
+        if (stato == StatoVisione.VISTO) {
+            voto = panelVotoStelle.getRating();
+            if (voto < 1 || voto > 5) {
+                JOptionPane.showMessageDialog(this, "Seleziona almeno una stella per i film inseriti come 'VISTO'.", "Errore: Valutazione Mancante", JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
+        DatiFilm dati = new DatiFilm(titolo, regista, anno, genere, voto, stato);
+        if (id == -1) {
+            facade.inserisciFilm(dati);
+        } else {
+            facade.modificaFilm(id, dati);
+        }
+        
+        return true;
     }
 
     private void pulisciCampi() {
@@ -294,6 +341,8 @@ public class VideotecaGUI extends JFrame implements Observer {
             };
             tableModel.addRow(riga);
         }
+        btnUndo.setEnabled(facade.canUndo());
+        btnRedo.setEnabled(facade.canRedo());
     }
 }
 class StarRatingPanel extends JPanel{

@@ -1,5 +1,5 @@
 package model;
-public class DatiFilm {
+public final class DatiFilm {
     public String titolo;
     public String regista;
     public int annoUscita;

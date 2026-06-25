@@ -52,6 +52,14 @@ public class VideotecaFacade {
         commandManager.eseguiComando(cmd);
     }
 
+    public boolean canUndo() {
+        return commandManager.canUndo(); 
+    }
+
+    public boolean canRedo() {
+        return commandManager.canRedo();
+    }
+
     public List<FilmIF> ottieniCatalogoFiltratoEOrdinato(String query, String tipo, String genere, String stato, String ordine) {
         List<FilmIF> risultato = videoteca.getElenco();
 
@@ -98,7 +106,7 @@ public class VideotecaFacade {
     }
 
     public void salvaDati() {
-        System.out.println("[Facade] Richiesta di salvataggio del catalogo attuale...");
+        System.out.println("Richiesta di salvataggio del catalogo attuale...");
         archivio.salva(videoteca.getElenco());
     }
 
@@ -106,6 +114,7 @@ public class VideotecaFacade {
         // Carica la lista da file e ripristina lo stato interno del modello videoteca
         List<FilmIF> filmCaricati = archivio.carica();
         videoteca.setElenco(filmCaricati);
+        commandManager.svuotaCronologia();
     }
 
 }
