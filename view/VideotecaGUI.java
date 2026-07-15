@@ -179,7 +179,6 @@ public class VideotecaGUI extends JFrame implements Observer {
             if (gestioneSalvataggioOModifica(-1)) {
                 facade.salvaDati();
                 pulisciCampi();
-                update();
             }
         });
 
@@ -200,7 +199,6 @@ public class VideotecaGUI extends JFrame implements Observer {
                     facade.salvaDati();
                     pulisciCampi();
                     tabellaFilm.clearSelection();
-                    update();
                 }
             }
         } else {
@@ -224,7 +222,6 @@ public class VideotecaGUI extends JFrame implements Observer {
                 facade.rimuoviFilm(id);
                 facade.salvaDati();
                 pulisciCampi();
-                update();
             }
         } else {
             JOptionPane.showMessageDialog(this, "Seleziona un film da rimuovere.");
@@ -236,7 +233,6 @@ public class VideotecaGUI extends JFrame implements Observer {
             facade.salvaDati(); 
             pulisciCampi();
             tabellaFilm.clearSelection();
-            update();
         });
 
         btnRedo.addActionListener(e -> {
@@ -244,16 +240,16 @@ public class VideotecaGUI extends JFrame implements Observer {
             facade.salvaDati(); 
             pulisciCampi();
             tabellaFilm.clearSelection();
-            update();
         });
 
-        videoteca.attach(this);
 
         try {
             facade.caricaDati(); 
         } catch (Exception e) {
             System.out.println("Nessun archivio precedente trovato o errore di lettura.");
         }
+
+        videoteca.attach(this);
 
         update();
     }

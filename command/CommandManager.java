@@ -18,30 +18,62 @@ public class CommandManager {
     }
 
     public void eseguiComando(Command comando) {
-        if (comando.doIt()) {
-            addToHistory(comando);
-        } else {
-            history.clear(); 
+        redoList.clear();
+
+        // 1. Inseriamo provvisoriamente il comando nella cronologia PRIMA dell'esecuzione.
+        // Così l'Observer vedrà canUndo() == true non appena doIt() notificherà il cambiamento.
+        addToHistory(comando);
+
+        boolean successo = false;
+        try {
+            successo = comando.doIt();
+        } catch (Exception e) {
+            // Se si verifica un'eccezione imprevista nel comando, facciamo il rollback
+            history.removeFirst();
+            throw e;
         }
-        
-        if (redoList.size() > 0) {
-            redoList.clear();
+
+        // 2. Se il comando restituisce false (operazione fallita o annullata dal comando stesso)
+        if (!successo) {
+            history.removeFirst(); 
         }
     }
 
     public void undo() {
-        if (history.size() > 0) {
+        if (!history.isEmpty()) {
             Command undoCmd = history.removeFirst();
-            undoCmd.undoIt();
+            
             redoList.addFirst(undoCmd); 
+
+            try {
+                undoCmd.undoIt();
+            } catch (Exception e) {
+                redoList.removeFirst();
+                history.addFirst(undoCmd);
+                throw e;
+            }
         }
     }
 
     public void redo() {
-        if (redoList.size() > 0) {
+        if (!redoList.isEmpty()) {
             Command redoCmd = redoList.removeFirst();
-            redoCmd.doIt();
+            
             history.addFirst(redoCmd); 
+
+            boolean successo = false;
+            try {
+                successo = redoCmd.doIt();
+            } catch (Exception e) {
+                history.removeFirst();
+                redoList.addFirst(redoCmd);
+                throw e;
+            }
+
+            if (!successo) {
+                history.removeFirst();
+                redoList.addFirst(redoCmd);
+            }
         }
     }
 

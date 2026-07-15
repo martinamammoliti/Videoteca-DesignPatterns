@@ -1,11 +1,11 @@
 package model;
 public final class DatiFilm {
-    public String titolo;
-    public String regista;
-    public int annoUscita;
-    public String genere;
-    public int valutazione;
-    public StatoVisione statoVisione;
+    private final String titolo;
+    private final String regista;
+    private final int annoUscita;
+    private final String genere;
+    private final int valutazione;
+    private final StatoVisione statoVisione;
 
     public DatiFilm(String titolo, String regista, int annoUscita, String genere, int valutazione, StatoVisione statoVisione){
         this.titolo=titolo;

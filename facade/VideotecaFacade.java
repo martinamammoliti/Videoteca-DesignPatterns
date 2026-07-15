@@ -14,7 +14,6 @@ public class VideotecaFacade {
     private final FilmDirector director;
     private final FilmBuilder builder;
     private final CommandManager commandManager;
-    private final FilmQueryContext queryContext;
     private final ArchivioFilm archivio;
 
     public VideotecaFacade(Videoteca videoteca) {
@@ -22,10 +21,8 @@ public class VideotecaFacade {
         this.director = new FilmDirector();
         this.builder = new ConcreteFilmBuilder();
         this.commandManager = new CommandManager();
-        this.queryContext = new FilmQueryContext();
         this.archivio = new ArchivioFilm();
     }
-
 
     public void undo() {
         commandManager.undo();
@@ -64,38 +61,38 @@ public class VideotecaFacade {
         List<FilmIF> risultato = videoteca.getElenco();
 
         // 1. Cerca per testo (Titolo o Regista)
-        if (!query.isEmpty()) {
-            if (tipo.equalsIgnoreCase("Titolo")) {
-                queryContext.setStrategy(new RicercaTitoloStrategy(query));
-            } else if (tipo.equalsIgnoreCase("Regista")) {
-                queryContext.setStrategy(new RicercaRegistaStrategy(query));
-            }
-            risultato = queryContext.eseguiQuery(risultato);
+        if (query != null && !query.trim().isEmpty()) {
+            FilmQueryStrategy strategiaRicerca = tipo.equalsIgnoreCase("Titolo") 
+                    ? new RicercaTitoloStrategy(query) 
+                    : new RicercaRegistaStrategy(query);
+            risultato = strategiaRicerca.eseguiQuery(risultato);
         }
 
         // 2. Filtra per Genere
-        if (!genere.isEmpty()) {
-            queryContext.setStrategy(new FiltroGenereStrategy(genere));
-            risultato = queryContext.eseguiQuery(risultato);
+        if (genere != null && !genere.trim().isEmpty()) {
+            risultato = new FiltroGenereStrategy(genere).eseguiQuery(risultato);
         }
 
         // 3. Filtra per Stato Visione
-        if (!stato.equalsIgnoreCase("Tutti")) {
+        if (stato != null && !stato.equalsIgnoreCase("Tutti")) {
             StatoVisione sv = StatoVisione.valueOf(stato);
-            queryContext.setStrategy(new FiltroStatoStrategy(sv));
-            risultato = queryContext.eseguiQuery(risultato);
+            risultato = new FiltroStatoStrategy(sv).eseguiQuery(risultato);
         }
 
         // 4. Ordina i risultati
-        if (!ordine.equalsIgnoreCase("Nessuno")) {
+        if (ordine != null && !ordine.equalsIgnoreCase("Nessuno")) {
+            FilmQueryStrategy strategiaOrdine = null;
             if (ordine.equalsIgnoreCase("Titolo")) {
-                queryContext.setStrategy(new OrdinamentoTitoloStrategy());
+                strategiaOrdine = new OrdinamentoTitoloStrategy();
             } else if (ordine.equalsIgnoreCase("Anno")) {
-                queryContext.setStrategy(new OrdinamentoAnnoStrategy());
+                strategiaOrdine = new OrdinamentoAnnoStrategy();
             } else if (ordine.equalsIgnoreCase("Valutazione")) {
-                queryContext.setStrategy(new OrdinamentoValutazioneStrategy());
+                strategiaOrdine = new OrdinamentoValutazioneStrategy();
             }
-            risultato = queryContext.eseguiQuery(risultato);
+            
+            if (strategiaOrdine != null) {
+                risultato = strategiaOrdine.eseguiQuery(risultato);
+            }
         }
 
         return risultato;
@@ -111,10 +108,8 @@ public class VideotecaFacade {
     }
 
     public void caricaDati() {
-        // Carica la lista da file e ripristina lo stato interno del modello videoteca
         List<FilmIF> filmCaricati = archivio.carica();
-        videoteca.setElenco(filmCaricati);
         commandManager.svuotaCronologia();
+        videoteca.setElenco(filmCaricati);
     }
-
 }
